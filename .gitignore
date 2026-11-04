@@ -1,0 +1,18 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+.env
+node_modules/
+.DS_Store
+accounting.db
+
+# local databases and runtime state
+*.db
+*.sqlite3
+
+# editor / agent tooling and private notes
+.claude/
+AGENTS.md
+CLAUDE.md
+INTERNAL_NOTES.md

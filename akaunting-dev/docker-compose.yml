@@ -1,0 +1,25 @@
+# Local Akaunting for trying the AkauntingLedger adapter. Dev-only credentials.
+# First run:  AKAUNTING_SETUP=true docker compose up -d
+# Later runs: docker compose up -d        (never pass AKAUNTING_SETUP again)
+services:
+  akaunting:
+    container_name: akaunting
+    image: docker.io/akaunting/akaunting:latest
+    ports:
+      - 8080:80
+    volumes:
+      - akaunting-data:/var/www/html
+    env_file: env/run.env
+    environment:
+      - AKAUNTING_SETUP
+    depends_on:
+      - akaunting-db
+  akaunting-db:
+    container_name: akaunting-db
+    image: mariadb
+    volumes:
+      - akaunting-db:/var/lib/mysql
+    env_file: env/db.env
+volumes:
+  akaunting-data:
+  akaunting-db:

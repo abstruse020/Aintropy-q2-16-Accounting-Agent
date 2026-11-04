@@ -1,0 +1,14 @@
+setup_commands:
+  - "python --version"
+
+run_commands:
+  - "python src/main.py init --reset"
+  - "python src/main.py sync"
+  - "python src/main.py review --accept-all"
+  - "python src/main.py chat 'How much did I spend in total in October 2026, and what were my top three spending categories?'"
+  - "python src/main.py status"
+
+test_commands:
+  - "python -m unittest discover -s src/tests"
+
+notes: "Python 3.9+ standard library only (nothing to install). Needs the `claude` CLI on PATH and the CLAUDE_KEY env var (used as the token for `claude -p`). By default the agent runs against a local FakeLedger (SQLite); no Docker, Akaunting or bank access needed. To use a real Akaunting instead, see akaunting-dev/README.md (set AKAUNTING_URL, AKAUNTING_USER, AKAUNTING_PASSWORD). Takes a few minutes because sync and chat call the model. `review --accept-all` accepts the agent's suggestions non-interactively; run `python src/main.py review` for the interactive flow."
