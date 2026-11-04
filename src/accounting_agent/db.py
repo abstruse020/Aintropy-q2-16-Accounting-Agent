@@ -1,5 +1,4 @@
 """SQLite store: pipeline state, the fake ledger, and the audit log (one file)."""
-import csv
 import hashlib
 import json
 import re
@@ -81,28 +80,26 @@ def _normalize(desc):
     return re.sub(r"\s+", " ", desc.strip().upper())
 
 
-def ingest_csv(conn, path):
-    """Load a bank statement CSV (date,description,amount,account).
+def ingest(conn, provider):
+    """Load rows from a BankProvider into the transactions table.
 
     Idempotent: the fingerprint includes an occurrence index, so two identical
-    purchases on one day stay distinct, and re-loading the same file adds nothing.
+    purchases on one day stay distinct, and loading the same data again adds nothing.
     """
     seen = {}
     added = skipped = 0
-    with open(path, newline="") as f:
-        for row in csv.DictReader(f):
-            minor = to_minor(row["amount"])
-            base = "|".join([row["account"].strip(), row["date"].strip(), str(minor), _normalize(row["description"])])
-            idx = seen.get(base, 0)
-            seen[base] = idx + 1
-            fp = hashlib.sha256(f"{base}|{idx}".encode()).hexdigest()
-            cur = conn.execute(
-                "INSERT OR IGNORE INTO transactions (fingerprint, date, description, amount_minor, account)"
-                " VALUES (?,?,?,?,?)",
-                (fp, row["date"].strip(), row["description"].strip(), minor, row["account"].strip()),
-            )
-            added += cur.rowcount
-            skipped += 1 - cur.rowcount
+    for row in provider.fetch():
+        base = "|".join([row.account, row.date, str(row.amount_minor), _normalize(row.description)])
+        idx = seen.get(base, 0)
+        seen[base] = idx + 1
+        fp = hashlib.sha256(f"{base}|{idx}".encode()).hexdigest()
+        cur = conn.execute(
+            "INSERT OR IGNORE INTO transactions (fingerprint, date, description, amount_minor, account)"
+            " VALUES (?,?,?,?,?)",
+            (fp, row.date, row.description, row.amount_minor, row.account),
+        )
+        added += cur.rowcount
+        skipped += 1 - cur.rowcount
     conn.commit()
-    audit(conn, "system", "ingest", {"file": str(path)}, {"added": added, "already_present": skipped})
+    audit(conn, "system", "ingest", {"source": provider.source}, {"added": added, "already_present": skipped})
     return added, skipped

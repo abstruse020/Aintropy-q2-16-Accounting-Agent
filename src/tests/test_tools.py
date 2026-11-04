@@ -8,7 +8,8 @@ import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from accounting_agent import db, ledger, mcp_server, tools, workflow     # noqa: E402
+from accounting_agent import db, ledger, llm, mcp_server, tools, workflow     # noqa: E402
+from accounting_agent.providers import BankProvider, BankRow, CsvStatementProvider   # noqa: E402
 from accounting_agent.ledger import FakeLedger         # noqa: E402
 
 CSV = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "data", "statement.csv")
@@ -19,7 +20,7 @@ class Base(unittest.TestCase):
         self._env = {k: os.environ.pop(k) for k in ledger.AKAUNTING_ENV if k in os.environ}   # hermetic: FakeLedger only
         self.dir = tempfile.TemporaryDirectory()
         self.conn = db.connect(os.path.join(self.dir.name, "t.db"))
-        db.ingest_csv(self.conn, CSV)
+        db.ingest(self.conn, CsvStatementProvider(CSV))
 
     def tearDown(self):
         os.environ.update(self._env)
@@ -30,10 +31,47 @@ class Base(unittest.TestCase):
         return self.conn.execute("SELECT id FROM transactions WHERE description LIKE ?", (f"%{like}%",)).fetchone()[0]
 
 
+class TestProviders(Base):
+    def test_csv_provider_returns_canonical_rows(self):
+        rows = CsvStatementProvider(CSV).fetch()
+        self.assertEqual(len(rows), 19)
+        self.assertEqual(rows[0], BankRow("2026-10-01", "ACME CORP PAYROLL", 320000, "Checking"))
+
+    def test_any_provider_plugs_in(self):
+        class Fixed(BankProvider):
+            name = "fixed"
+            def fetch(self):
+                return [BankRow("2026-11-01", "NEW SHOP", -1250, "Savings")]
+        added, _ = db.ingest(self.conn, Fixed())
+        self.assertEqual(added, 1)
+        self.assertEqual(self.conn.execute("SELECT amount_minor FROM transactions WHERE description='NEW SHOP'")
+                         .fetchone()[0], -1250)
+
+    def test_base_provider_must_be_implemented(self):
+        with self.assertRaises(NotImplementedError):
+            BankProvider().fetch()
+
+
+class TestSecrets(unittest.TestCase):
+    def test_no_secret_on_the_claude_command_line(self):
+        saved = dict(os.environ)
+        try:
+            os.environ.update(AKAUNTING_URL="http://x", AKAUNTING_USER="me@example.com",
+                              AKAUNTING_PASSWORD="hunter2-very-secret", CLAUDE_KEY="tok-very-secret")
+            cmd = llm.build_command("hi", "sync", "/tmp/x.db", "sys")
+        finally:
+            os.environ.clear()
+            os.environ.update(saved)
+        joined = " ".join(cmd)
+        for secret in ("hunter2-very-secret", "tok-very-secret"):
+            self.assertNotIn(secret, joined)
+        self.assertIn("${AKAUNTING_PASSWORD}", joined)       # a reference, expanded by claude from its environment
+
+
 class TestIngest(Base):
     def test_reload_adds_nothing(self):
         before = self.conn.execute("SELECT COUNT(*) FROM transactions").fetchone()[0]
-        added, _ = db.ingest_csv(self.conn, CSV)
+        added, _ = db.ingest(self.conn, CsvStatementProvider(CSV))
         self.assertEqual(added, 0)
         self.assertEqual(self.conn.execute("SELECT COUNT(*) FROM transactions").fetchone()[0], before)
 

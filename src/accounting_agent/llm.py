@@ -47,10 +47,12 @@ def _env():
     return env
 
 
-def run_claude(prompt, mode, db_path, system, budget_usd="2.00", session_id=None, resume=None, timeout=600):
-    env = _env()
+def build_command(prompt, mode, db_path, system, budget_usd="2.00", session_id=None, resume=None):
+    """The `claude -p` argv. It must never contain a secret: anyone on the machine can read argv via `ps`.
+    Settings the tool server needs are passed as ${NAME} references, which `claude` expands from its own
+    environment (set in run_claude), so the values never appear on the command line."""
     server_env = {"ACCT_MODE": mode, "ACCT_DB": os.path.abspath(db_path), "PYTHONPATH": SRC_DIR}
-    server_env.update({k: os.environ[k] for k in AKAUNTING_ENV if k in os.environ})   # ledger choice reaches the tools
+    server_env.update({k: "${%s}" % k for k in AKAUNTING_ENV if k in os.environ})
     mcp = {"mcpServers": {"acct": {
         "command": sys.executable,
         "args": ["-m", "accounting_agent.mcp_server"],
@@ -70,6 +72,12 @@ def run_claude(prompt, mode, db_path, system, budget_usd="2.00", session_id=None
         cmd += ["--session-id", session_id]
     else:
         cmd += ["--no-session-persistence"]
+    return cmd
+
+
+def run_claude(prompt, mode, db_path, system, budget_usd="2.00", session_id=None, resume=None, timeout=600):
+    env = _env()
+    cmd = build_command(prompt, mode, db_path, system, budget_usd, session_id, resume)
     try:
         p = subprocess.run(cmd, env=env, capture_output=True, text=True, timeout=timeout)
     except FileNotFoundError:

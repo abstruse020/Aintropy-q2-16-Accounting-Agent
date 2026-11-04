@@ -19,6 +19,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from accounting_agent import db, workflow          # noqa: E402
 from accounting_agent.ledger import LedgerError      # noqa: E402
 from accounting_agent.llm import LLMError          # noqa: E402
+from accounting_agent.providers import CsvStatementProvider   # noqa: E402
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -44,7 +45,7 @@ def main(argv=None):
     conn = db.connect(a.db)
     try:
         if a.cmd == "init":
-            added, skipped = db.ingest_csv(conn, a.csv)
+            added, skipped = db.ingest(conn, CsvStatementProvider(a.csv))
             print(f"[init] {added} new, {skipped} already present")
         elif a.cmd == "sync":
             print("[sync] state:", workflow.sync(conn, a.db))

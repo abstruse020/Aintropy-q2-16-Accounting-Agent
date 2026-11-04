@@ -16,6 +16,7 @@ from urllib.parse import parse_qs, urlparse
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from accounting_agent import db, tools                                               # noqa: E402
+from accounting_agent.providers import CsvStatementProvider                         # noqa: E402
 from accounting_agent.ledger import AkauntingLedger, DuplicateNumber, LedgerError    # noqa: E402
 
 AUTH = "Basic " + base64.b64encode(b"u@example.com:pw").decode()
@@ -152,7 +153,7 @@ class TestPipelineWithAkaunting(unittest.TestCase):
         from tempfile import mkdtemp
         self.conn = db.connect(os.path.join(mkdtemp(), "t.db"))
         csv_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "data", "statement.csv")
-        db.ingest_csv(self.conn, csv_path)
+        db.ingest(self.conn, CsvStatementProvider(csv_path))
 
     def tearDown(self):
         os.environ.clear()
