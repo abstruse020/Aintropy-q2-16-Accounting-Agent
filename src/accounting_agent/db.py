@@ -20,7 +20,8 @@ CREATE TABLE IF NOT EXISTS transactions (
     kind            TEXT,                      -- expense | income
     category        TEXT,
     confidence      REAL,
-    rationale       TEXT,
+    rationale       TEXT,                      -- the agent's own reasoning
+    review_reason   TEXT,                      -- why it is waiting for a human (set by the gate)
     idempotency_key TEXT UNIQUE,               -- frozen at first post attempt
     ledger_ref      INTEGER,
     attempts        INTEGER NOT NULL DEFAULT 0,
@@ -51,6 +52,10 @@ def connect(path):
     conn = sqlite3.connect(path, timeout=30)
     conn.row_factory = sqlite3.Row
     conn.executescript(SCHEMA)
+    cols = {r["name"] for r in conn.execute("PRAGMA table_info(transactions)")}
+    if "review_reason" not in cols:                 # databases created before this column existed
+        conn.execute("ALTER TABLE transactions ADD COLUMN review_reason TEXT")
+        conn.commit()
     return conn
 
 

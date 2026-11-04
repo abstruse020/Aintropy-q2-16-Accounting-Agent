@@ -15,6 +15,17 @@ class ToolError(Exception):
     """Returned to the model as an error it can recover from."""
 
 
+def hold_reasons(amount_minor, confidence):
+    """Why the gate keeps a proposal from being booked automatically (empty list = it may be)."""
+    reasons = []
+    if confidence is not None and confidence < AUTO_APPROVE_CONFIDENCE:
+        reasons.append(f"confidence {confidence:.2f} is below the {AUTO_APPROVE_CONFIDENCE:.2f} auto-approve level")
+    if abs(amount_minor) >= LARGE_AMOUNT_MINOR:
+        reasons.append(f"amount {fmt(abs(amount_minor))} is at or above the {fmt(LARGE_AMOUNT_MINOR)} "
+                       "limit for automatic booking")
+    return reasons
+
+
 # ---------------------------------------------------------------- posting
 def post_transaction(conn, txn_id, actor="system"):
     """Idempotently post one approved transaction to the ledger."""
@@ -88,14 +99,11 @@ def propose_category(conn, txn_id, kind, category, confidence, rationale=""):
         raise ToolError("confidence must be between 0 and 1")
 
     # The gate (code, not model): who gets to decide?
-    reasons = []
-    if confidence < AUTO_APPROVE_CONFIDENCE:
-        reasons.append("low confidence")
-    if abs(t["amount_minor"]) >= LARGE_AMOUNT_MINOR:
-        reasons.append("large amount")
+    reasons = hold_reasons(t["amount_minor"], confidence)
     state = "needs_review" if reasons else "approved"
-    conn.execute("UPDATE transactions SET state=?, kind=?, category=?, confidence=?, rationale=? WHERE id=?",
-                 (state, kind, category, confidence, rationale or None, txn_id))
+    conn.execute("UPDATE transactions SET state=?, kind=?, category=?, confidence=?, rationale=?, review_reason=?"
+                 " WHERE id=?",
+                 (state, kind, category, confidence, rationale or None, "; ".join(reasons) or None, txn_id))
     conn.commit()
     if state == "approved":
         try:
@@ -115,7 +123,8 @@ def flag_for_review(conn, txn_id, reason):
         raise ToolError(f"unknown txn_id {txn_id}")
     if t["state"] != "new":
         raise ToolError(f"txn {txn_id} is already {t['state']}")
-    conn.execute("UPDATE transactions SET state='needs_review', rationale=? WHERE id=?", (reason, txn_id))
+    conn.execute("UPDATE transactions SET state='needs_review', review_reason=? WHERE id=?",
+                 (f"the agent could not decide: {reason}", txn_id))
     conn.commit()
     return {"txn_id": txn_id, "status": "needs_review"}
 

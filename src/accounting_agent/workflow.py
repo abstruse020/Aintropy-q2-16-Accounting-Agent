@@ -4,7 +4,7 @@ import uuid
 from . import db, llm
 from .db import fmt
 from .ledger import AkauntingLedger, DEFAULT_CATEGORIES, LedgerError, get_ledger
-from .tools import post_transaction
+from .tools import hold_reasons, post_transaction
 
 MAX_ROUNDS = 5
 
@@ -42,40 +42,79 @@ def sync(conn, db_path):
     return counts(conn)
 
 
+def _describe(t):
+    """The header of one review item: what the transaction is and why it is here."""
+    print(f"\n#{t['id']}  {t['date']}  {t['account']}  {fmt(t['amount_minor'])}  {t['description']}")
+    why = t["review_reason"] or "; ".join(hold_reasons(t["amount_minor"], t["confidence"])) or "not recorded"
+    print(f"   Held because: {why}")
+    if t["category"]:
+        extra = f" - {t['rationale']}" if t["rationale"] else ""
+        print(f"   Agent suggests: {t['category']} ({t['kind']}), confidence {t['confidence']:.2f}{extra}")
+    else:
+        print("   Agent made no suggestion.")
+
+
+def _choose(t, cats, needed, options, input_fn):
+    """Ask the human. Returns a category name, 'skip', or None if input ended."""
+    print(f"   Pick a category ({needed}):")
+    for i, name in enumerate(options, 1):
+        print(f"     {i:>2}) {name}" + ("   <- agent's pick" if name == t["category"] else ""))
+    accept = f'[Enter]=accept "{t["category"]}", ' if t["category"] else ""
+    while True:
+        try:
+            choice = input_fn(f"   {accept}number or name=choose another, s=skip > ").strip()
+        except EOFError:
+            return None
+        if choice.lower() == "s":
+            return "skip"
+        if choice == "":
+            if t["category"] in options:
+                return t["category"]
+            print("   There is no suggestion to accept. Pick a category, or s to skip.")
+            continue
+        if choice.isdigit() and 1 <= int(choice) <= len(options):
+            return options[int(choice) - 1]
+        match = next((c for c in cats if c.lower() == choice.lower()), None)
+        if match is None:
+            print(f"   '{choice}' is not in the list. Type a number from 1 to {len(options)} or a name.")
+        elif cats[match] != needed:
+            print(f"   {match} is an {cats[match]} category, but this is an {needed}. Pick from the list.")
+        else:
+            return match
+
+
 def review(conn, accept_all=False, input_fn=input):
-    """Human step. Each item shows the agent's suggestion; the human decides."""
+    """Human step. Shows the agent's suggestion and the valid categories; the human decides."""
     rows = conn.execute("SELECT * FROM transactions WHERE state='needs_review' ORDER BY date, id").fetchall()
-    cats = get_ledger(conn).categories()
     if not rows:
         print("[review] nothing to review")
+    cats = get_ledger(conn).categories()
     for t in rows:
-        sug = f"{t['kind']}/{t['category']} ({t['confidence']:.2f})" if t["category"] else "no suggestion"
-        print(f"\n#{t['id']} {t['date']} {t['account']} {fmt(t['amount_minor']):>10}  {t['description']}")
-        print(f"   agent: {sug}  | {t['rationale'] or ''}")
+        _describe(t)
+        needed = "expense" if t["amount_minor"] < 0 else "income"     # money out vs money in
+        options = sorted(n for n, typ in cats.items() if typ == needed)
         if accept_all:
             if not t["category"]:
                 print("   -> left in queue (no suggestion to accept)")
                 continue
-            choice = ""
+            category = t["category"]
         else:
-            choice = input_fn("   [enter]=accept, category name=override, s=skip > ").strip()
-        if choice.lower() == "s":
+            category = _choose(t, cats, needed, options, input_fn)
+            if category is None:
+                print("\n[review] input ended; remaining items stay in the queue")
+                break
+        if category == "skip":
             conn.execute("UPDATE transactions SET state='skipped' WHERE id=?", (t["id"],))
             conn.commit()
             db.audit(conn, "human", "skip", {"txn_id": t["id"]})
-            continue
-        category = t["category"] if not choice else next((c for c in cats if c.lower() == choice.lower()), None)
-        if category is None:
-            print("   unknown category; left in queue")
-            continue
-        if not choice and not t["category"]:
-            print("   nothing to accept; left in queue")
+            print("   -> skipped")
             continue
         kind = cats[category]
         conn.execute("UPDATE transactions SET state='approved', kind=?, category=? WHERE id=?",
                      (kind, category, t["id"]))
         conn.commit()
-        db.audit(conn, "human", "approve", {"txn_id": t["id"], "category": category, "kind": kind})
+        db.audit(conn, "human", "approve", {"txn_id": t["id"], "category": category, "kind": kind,
+                                            "agent_suggested": t["category"]})
         try:
             post_transaction(conn, t["id"], actor="human")
             print(f"   -> posted as {kind}/{category}")

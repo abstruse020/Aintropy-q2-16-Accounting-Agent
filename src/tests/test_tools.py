@@ -8,7 +8,7 @@ import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from accounting_agent import db, ledger, mcp_server, tools     # noqa: E402
+from accounting_agent import db, ledger, mcp_server, tools, workflow     # noqa: E402
 from accounting_agent.ledger import FakeLedger         # noqa: E402
 
 CSV = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "data", "statement.csv")
@@ -69,6 +69,26 @@ class TestGate(Base):
                          "needs_review")
         self.assertEqual(self.conn.execute("SELECT COUNT(*) FROM ledger_entries").fetchone()[0], 0)
 
+    def test_review_reason_is_stored_and_readable(self):
+        tools.propose_category(self.conn, self.tid("DELTA"), "expense", "Transport", 0.99)
+        tools.propose_category(self.conn, self.tid("AMZN"), "expense", "Shopping", 0.5)
+        tools.flag_for_review(self.conn, self.tid("PAYPAL"), "who is J Smith?")
+        why = {r["id"]: r["review_reason"] for r in self.conn.execute("SELECT id, review_reason FROM transactions")}
+        self.assertIn("640.00 is at or above the 500.00", why[self.tid("DELTA")])
+        self.assertIn("confidence 0.50 is below", why[self.tid("AMZN")])
+        self.assertIn("who is J Smith?", why[self.tid("PAYPAL")])
+
+    def test_old_database_gets_the_new_column(self):
+        path = os.path.join(self.dir.name, "old.db")
+        import sqlite3
+        c = sqlite3.connect(path)
+        c.execute("CREATE TABLE transactions (id INTEGER PRIMARY KEY, fingerprint TEXT, date TEXT, description TEXT,"
+                  " amount_minor INTEGER, account TEXT, state TEXT, kind TEXT, category TEXT, confidence REAL,"
+                  " rationale TEXT, idempotency_key TEXT, ledger_ref INTEGER, attempts INTEGER, last_error TEXT)")
+        c.commit(); c.close()
+        cols = {r[1] for r in db.connect(path).execute("PRAGMA table_info(transactions)")}
+        self.assertIn("review_reason", cols)
+
     def test_transfer_is_not_a_kind(self):
         with self.assertRaises(tools.ToolError):
             tools.propose_category(self.conn, self.tid("NETFLIX"), "transfer", "Transfer", 0.99)
@@ -88,6 +108,65 @@ class TestGate(Base):
         tools.post_transaction(self.conn, t)
         self.assertEqual(self.conn.execute("SELECT COUNT(*) FROM ledger_entries").fetchone()[0], 1)
         self.assertEqual(self.conn.execute("SELECT state FROM transactions WHERE id=?", (t,)).fetchone()[0], "posted")
+
+
+class TestReview(Base):
+    def _queue(self):
+        tools.propose_category(self.conn, self.tid("AMZN"), "expense", "Shopping", 0.5)      # has a suggestion
+        tools.flag_for_review(self.conn, self.tid("PAYPAL"), "who is J Smith?")               # has none
+
+    def _run(self, answers):
+        it = iter(answers)
+        import contextlib
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            workflow.review(self.conn, input_fn=lambda _p: next(it))
+        return buf.getvalue()
+
+    def _row(self, like):
+        return self.conn.execute("SELECT * FROM transactions WHERE description LIKE ?", (f"%{like}%",)).fetchone()
+
+    def test_screen_shows_suggestion_and_numbered_choices(self):
+        self._queue()
+        out = self._run(["", "s"])
+        self.assertIn("Agent suggests: Shopping (expense), confidence 0.50", out)
+        self.assertIn("1) Dining", out)
+        self.assertIn("<- agent's pick", out)
+        self.assertIn("Agent made no suggestion.", out)
+        self.assertNotIn("Salary", out)                      # money out: income categories are not offered
+
+    def test_enter_accepts_number_and_name_override(self):
+        self._queue()
+        self._run(["", "2"])                                 # accept Shopping; pick option 2 for PayPal
+        self.assertEqual(self._row("AMZN")["category"], "Shopping")
+        self.assertEqual(self._row("AMZN")["state"], "posted")
+        self.assertEqual(self._row("PAYPAL")["category"], sorted(
+            n for n, t in ledger.DEFAULT_CATEGORIES.items() if t == "expense")[1])    # option 2 = Groceries
+
+    def test_override_by_name_and_wrong_type_is_rejected(self):
+        self._queue()
+        out = self._run(["salary", "dining", "health"])      # Salary refused for an expense, then Dining; then PayPal
+        self.assertIn("Salary is an income category, but this is an expense", out)
+        self.assertEqual(self._row("AMZN")["category"], "Dining")
+        self.assertEqual(self._row("PAYPAL")["category"], "Health")
+
+    def test_enter_without_suggestion_asks_again_and_bad_input_reprompts(self):
+        self._queue()
+        out = self._run(["s", "", "99", "nonsense", "s"])
+        self.assertIn("There is no suggestion to accept", out)
+        self.assertIn("'99' is not in the list", out)
+        self.assertIn("'nonsense' is not in the list", out)
+        self.assertEqual(self._row("AMZN")["state"], "skipped")
+        self.assertEqual(self._row("PAYPAL")["state"], "skipped")
+
+    def test_ending_input_leaves_items_queued(self):
+        self._queue()
+        import contextlib
+        def eof(_p):
+            raise EOFError
+        with contextlib.redirect_stdout(io.StringIO()):
+            workflow.review(self.conn, input_fn=eof)
+        self.assertEqual(self._row("AMZN")["state"], "needs_review")
 
 
 class TestModes(Base):
