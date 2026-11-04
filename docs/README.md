@@ -2,7 +2,7 @@
 
 An agent that reads a bank statement, decides what each transaction is, books it in an accounting ledger, and answers questions about the result. The model makes the judgment calls. Ordinary code decides what it is allowed to do.
 
-It runs on `claude -p`, with its tools served over MCP. The ledger is Akaunting, or a small local stand-in so the project runs anywhere. Slides: `docs/slides.md`.
+It runs on `claude -p`, with its tools served over MCP. The ledger is Akaunting, or a small local stand-in so the project runs anywhere.
 
 ## Running it
 
@@ -65,7 +65,6 @@ I tested the first row for real: I killed `sync` after 7 of 19 transactions were
 - **Bank source:** implement `BankProvider.fetch()` (see `providers.py`). This is enough for another file format. It is not enough for a paid bank connection such as Plaid or GoCardless, which also need token renewal, sync cursors, pending-versus-posted handling and the bank's own transaction ids. That would mean extending the interface.
 - **Ledger:** implement five methods (`categories`, `post`, `find_by_number`, `search`, `spend_report`) and select it in `get_ledger`. Akaunting is the worked example.
 - **Tools:** they are served as standard MCP over stdio. I have only run them with `claude`.
-- There are no outbound hooks yet, such as a notification when items need review.
 
 ## Akaunting notes
 
