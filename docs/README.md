@@ -4,6 +4,8 @@ An agent that reads a bank statement, decides what each transaction is, books it
 
 It runs on `claude -p`, with its tools served over MCP. The ledger is Akaunting, or a small local stand-in so the project runs anywhere.
 
+**Slides:** [accounting-agent-slides.pdf](slides/accounting-agent-slides.pdf) (3 slides). The editable slide source, with speaker notes, is in `docs/slides/source/`.
+
 ## Running it
 
 ```

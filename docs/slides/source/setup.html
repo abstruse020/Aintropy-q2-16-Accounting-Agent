@@ -1,0 +1,70 @@
+<section id="setup" data-transition="fade" style="display:flex; flex-direction:column; gap:32px; padding:72px 128px; background:#f6f4ee">
+  <div style="display:flex; flex-direction:column; gap:12px">
+    <p style="font-family:'DM Sans', Arial, sans-serif; font-size:28px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:#0f766e">Accounting agent</p>
+    <h1 style="font-family:'DM Sans', Arial, sans-serif; font-size:76px; font-weight:700; line-height:1.05; color:#1b2a2f">From bank CSVs to answers</h1>
+    <p style="font-family:'DM Sans', Arial, sans-serif; font-size:32px; color:#4a5a5f">Load a statement, let the agent sort it, then ask questions in plain English.</p>
+  </div>
+  <div style="display:flex; flex-direction:row; gap:20px">
+    <div style="display:flex; flex-direction:column; gap:8px; flex:1; padding:24px; background:#ffffff; border:1px solid #dad6cb; border-radius:16px">
+      <p style="font-family:'DM Sans', Arial, sans-serif; font-size:24px; font-weight:700; letter-spacing:1px; color:#b45309">PLUG-IN</p>
+      <h3 style="font-family:'DM Sans', Arial, sans-serif; font-size:32px; font-weight:700; color:#1b2a2f">Your CSV</h3>
+      <p style="font-family:'DM Sans', Arial, sans-serif; font-size:24px; color:#4a5a5f">date, description, amount, account</p>
+    </div>
+    <x-shape kind="arrow-right" style="width:44px; height:24px; align-self:center; background:#0f766e"></x-shape>
+    <div style="display:flex; flex-direction:column; gap:8px; flex:1; padding:24px; background:#ffffff; border:1px solid #dad6cb; border-radius:16px">
+      <p style="font-family:'DM Sans', Arial, sans-serif; font-size:24px; font-weight:700; letter-spacing:1px; color:#4a5a5f">STATE</p>
+      <h3 style="font-family:'DM Sans', Arial, sans-serif; font-size:32px; font-weight:700; color:#1b2a2f">SQLite</h3>
+      <p style="font-family:'DM Sans', Arial, sans-serif; font-size:24px; color:#4a5a5f">One row per transaction, with a state</p>
+    </div>
+    <x-shape kind="arrow-right" style="width:44px; height:24px; align-self:center; background:#0f766e"></x-shape>
+    <div style="display:flex; flex-direction:column; gap:8px; flex:1; padding:24px; background:#ffffff; border:1px solid #dad6cb; border-radius:16px">
+      <p style="font-family:'DM Sans', Arial, sans-serif; font-size:24px; font-weight:700; letter-spacing:1px; color:#0f766e">MODEL</p>
+      <h3 style="font-family:'DM Sans', Arial, sans-serif; font-size:32px; font-weight:700; color:#1b2a2f">Agent</h3>
+      <p style="font-family:'DM Sans', Arial, sans-serif; font-size:24px; color:#4a5a5f">Claude with a small set of tools</p>
+    </div>
+    <x-shape kind="arrow-right" style="width:44px; height:24px; align-self:center; background:#0f766e"></x-shape>
+    <div style="display:flex; flex-direction:column; gap:8px; flex:1; padding:24px; background:#ffffff; border:1px solid #dad6cb; border-radius:16px">
+      <p style="font-family:'DM Sans', Arial, sans-serif; font-size:24px; font-weight:700; letter-spacing:1px; color:#1b2a2f">CODE</p>
+      <h3 style="font-family:'DM Sans', Arial, sans-serif; font-size:32px; font-weight:700; color:#1b2a2f">Gate</h3>
+      <p style="font-family:'DM Sans', Arial, sans-serif; font-size:24px; color:#4a5a5f">Code decides what gets booked</p>
+    </div>
+    <x-shape kind="arrow-right" style="width:44px; height:24px; align-self:center; background:#0f766e"></x-shape>
+    <div style="display:flex; flex-direction:column; gap:8px; flex:1; padding:24px; background:#ffffff; border:1px solid #dad6cb; border-radius:16px">
+      <p style="font-family:'DM Sans', Arial, sans-serif; font-size:24px; font-weight:700; letter-spacing:1px; color:#b45309">PLUG-IN</p>
+      <h3 style="font-family:'DM Sans', Arial, sans-serif; font-size:32px; font-weight:700; color:#1b2a2f">Ledger</h3>
+      <p style="font-family:'DM Sans', Arial, sans-serif; font-size:24px; color:#4a5a5f">Akaunting, or a local stand-in</p>
+    </div>
+  </div>
+  <div style="display:flex; flex-direction:row; gap:20px">
+    <div style="display:flex; flex-direction:column; gap:8px; flex:1; padding:24px; background:#fff4e5; border:2px solid #b45309; border-radius:16px">
+      <h3 style="font-family:'DM Sans', Arial, sans-serif; font-size:32px; font-weight:700; color:#8a3f06">You review the doubtful ones</h3>
+      <p style="font-family:'DM Sans', Arial, sans-serif; font-size:26px; color:#4a3a2a">Large amounts or unsure category items wait for you, with the reason and valid categories.</p>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:8px; flex:1; padding:24px; background:#e6f4f1; border:2px solid #0f766e; border-radius:16px">
+      <h3 style="font-family:'DM Sans', Arial, sans-serif; font-size:32px; font-weight:700; color:#0b5a54">You ask, it answers</h3>
+      <p style="font-family:'DM Sans', Arial, sans-serif; font-size:26px; color:#1f3b38">"What did I spend on dining?" Chat reads the ledger and cannot change it.</p>
+    </div>
+  </div>
+  <div style="display:flex; flex-direction:column; gap:12px">
+    <p style="font-family:'DM Sans', Arial, sans-serif; font-size:28px; font-weight:700; color:#1b2a2f">How you use it</p>
+    <div style="display:flex; flex-direction:row; gap:20px">
+      <div style="display:flex; flex-direction:column; gap:8px; flex:1; padding:24px; background:#1b2a2f; border-radius:16px">
+        <p style="font-family:'JetBrains Mono', 'Courier New', monospace; font-size:26px; font-weight:600; color:#5eead4">init --csv file.csv</p>
+        <p style="font-family:'DM Sans', Arial, sans-serif; font-size:24px; color:#d9e2e0">Load your statement</p>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:8px; flex:1; padding:24px; background:#1b2a2f; border-radius:16px">
+        <p style="font-family:'JetBrains Mono', 'Courier New', monospace; font-size:26px; font-weight:600; color:#5eead4">sync</p>
+        <p style="font-family:'DM Sans', Arial, sans-serif; font-size:24px; color:#d9e2e0">The agent sorts every row</p>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:8px; flex:1; padding:24px; background:#1b2a2f; border-radius:16px">
+        <p style="font-family:'JetBrains Mono', 'Courier New', monospace; font-size:26px; font-weight:600; color:#5eead4">review</p>
+        <p style="font-family:'DM Sans', Arial, sans-serif; font-size:24px; color:#d9e2e0">You settle what was held back</p>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:8px; flex:1; padding:24px; background:#1b2a2f; border-radius:16px">
+        <p style="font-family:'JetBrains Mono', 'Courier New', monospace; font-size:26px; font-weight:600; color:#5eead4">chat</p>
+        <p style="font-family:'DM Sans', Arial, sans-serif; font-size:24px; color:#d9e2e0">Ask about your spending</p>
+      </div>
+    </div>
+  </div>
+  <aside>The goal: give it a bank statement as a CSV, get categorized books, then talk to the agent about your spending. The agent runs on claude -p with a small set of tools. A code gate, not the model, decides what is booked automatically. Anything large or doubtful waits for a person. The ledger is Akaunting, or a local stand-in so it runs anywhere. The four commands at the bottom are the whole workflow.</aside>
+</section>

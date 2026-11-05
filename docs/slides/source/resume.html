@@ -1,0 +1,48 @@
+<section id="resume" data-transition="fade" style="background:#f6f4ee">
+  <div id="p440d7f290635r0-95706574" style="position:absolute; top:80px; left:128px; width:1665px; height:123px; display:flex; flex-direction:column; gap:10px">
+    <h2 style="font-family:'DM Sans', Arial, sans-serif; font-size:64px; font-weight:700; line-height:1.1; color:#1b2a2f">Safe to interrupt, safe to rerun</h2>
+    <p style="font-family:'DM Sans', Arial, sans-serif; font-size:30px; color:#3c4c51">Kill it, crash it, or run it twice: it picks up where it stopped and never books anything twice.</p>
+  </div>
+  <div style="position:absolute; top:240px; left:128px; width:917px; height:241px; display:flex; flex-direction:column; gap:12px; padding:24px; background:#0f766e; border-radius:16px">
+    <h3 style="font-family:'DM Sans', Arial, sans-serif; font-size:34px; font-weight:700; color:#f6f4ee">Internal SQL database (SQLite)</h3>
+    <p style="font-family:'DM Sans', Arial, sans-serif; font-size:26px; font-weight:700; color:#f6f4ee">Failsafe for crashes and kills: every step is saved the moment it happens, so finished work is never lost.</p>
+    <div style="display:flex; flex-direction:row; gap:12px; align-items:center">
+      <p style="padding:10px 22px; font-family:'JetBrains Mono', 'Courier New', monospace; font-size:26px; font-weight:600; color:#1b2a2f; background:#e4e0d3; border-radius:256px">new</p>
+      <x-shape kind="arrow-right" style="width:36px; height:22px; background:#f6f4ee"></x-shape>
+      <p style="padding:8px 22px; font-family:'JetBrains Mono', 'Courier New', monospace; font-size:26px; font-weight:600; color:#1b2a2f; background:#fff4e5; border:2px solid #b45309; border-radius:256px">needs_review</p>
+      <x-shape kind="arrow-right" style="width:36px; height:22px; background:#f6f4ee"></x-shape>
+      <p style="padding:10px 22px; font-family:'JetBrains Mono', 'Courier New', monospace; font-size:26px; font-weight:600; color:#1b2a2f; background:#e4e0d3; border-radius:256px">approved</p>
+      <x-shape kind="arrow-right" style="width:36px; height:22px; background:#f6f4ee"></x-shape>
+      <p style="padding:10px 22px; font-family:'JetBrains Mono', 'Courier New', monospace; font-size:26px; font-weight:600; color:#0f766e; background:#f6f4ee; border-radius:256px">posted</p>
+    </div>
+  </div>
+  <div id="p440d7f290635r2_0-95706574" style="position:absolute; top:505px; left:128px; width:917px; height:461px; display:flex; flex-direction:column; gap:8px; padding:28px 32px; background:#ffffff; border:1px solid #dad6cb; border-radius:16px">
+    <h3 style="font-family:'DM Sans', Arial, sans-serif; font-size:34px; font-weight:700; color:#1b2a2f">When something breaks</h3>
+    <div style="display:flex; flex-direction:row; gap:24px; padding:14px 0 0; border-top:1px solid #dad6cb">
+      <p style="width:250px; font-family:'DM Sans', Arial, sans-serif; font-size:24px; font-weight:700; color:#1b2a2f">Killed mid-run</p>
+      <p style="flex:1; font-family:'DM Sans', Arial, sans-serif; font-size:24px; color:#3c4c51">Rows already decided are saved. The next sync does only the rest.</p>
+    </div>
+    <div style="display:flex; flex-direction:row; gap:24px; padding:14px 0 0; border-top:1px solid #dad6cb">
+      <p style="width:250px; font-family:'DM Sans', Arial, sans-serif; font-size:24px; font-weight:700; color:#1b2a2f">Model call fails</p>
+      <p style="flex:1; font-family:'DM Sans', Arial, sans-serif; font-size:24px; color:#3c4c51">The run stops with an error. Rows stay new. Run sync again.</p>
+    </div>
+    <div style="display:flex; flex-direction:row; gap:24px; padding:14px 0 0; border-top:1px solid #dad6cb">
+      <p style="width:250px; font-family:'DM Sans', Arial, sans-serif; font-size:24px; font-weight:700; color:#1b2a2f">Ledger is down</p>
+      <p style="flex:1; font-family:'DM Sans', Arial, sans-serif; font-size:24px; color:#3c4c51">The row stays approved with the error saved. It is posted first next time.</p>
+    </div>
+    <div style="display:flex; flex-direction:row; gap:24px; padding:14px 0 0; border-top:1px solid #dad6cb">
+      <p style="width:250px; font-family:'DM Sans', Arial, sans-serif; font-size:24px; font-weight:700; color:#1b2a2f">Crash after a post</p>
+      <p style="flex:1; font-family:'DM Sans', Arial, sans-serif; font-size:24px; color:#3c4c51">The same ID is sent again. The ledger says already there. No duplicate.</p>
+    </div>
+  </div>
+  <div id="p440d7f290635r2_1-95706574" style="position:absolute; top:240px; left:1072px; width:720px; height:726px; display:flex; flex-direction:column; justify-content:space-between; gap:12px; padding:32px; background:#ffffff; border:2px solid #0f766e; border-radius:16px">
+    <h3 style="font-family:'DM Sans', Arial, sans-serif; font-size:34px; font-weight:700; color:#0b5a54">Handle same transaction, same ID</h3>
+    <p style="font-family:'DM Sans', Arial, sans-serif; font-size:24px; font-weight:700; color:#1b2a2f">Two identical coffees, same day. Both rows read:</p>
+    <p style="padding:16px 20px; font-family:'JetBrains Mono', 'Courier New', monospace; font-size:24px; color:#1b2a2f; background:#efebe0; border-radius:12px">Checking | 2026-10-03 | -5.75<br>SQ *BLUE BOTTLE 0423 SF</p>
+    <p style="font-family:'DM Sans', Arial, sans-serif; font-size:24px; color:#3c4c51">So we add n, the count of identical rows before this one. Different n, different ID:</p>
+    <p style="padding:16px 20px; font-family:'JetBrains Mono', 'Courier New', monospace; font-size:24px; font-weight:600; color:#1b2a2f; background:#e6f4f1; border-radius:12px">n=0 txn-8b3c6f4d03659c9e079e<br>n=1 txn-32775b79e1ed17875fea</p>
+    <p style="font-family:'DM Sans', Arial, sans-serif; font-size:24px; color:#3c4c51">The ID is a SHA-256 fingerprint of the fields plus n: same input, same ID.</p>
+    <p style="padding:18px 22px; font-family:'DM Sans', Arial, sans-serif; font-size:26px; font-weight:700; color:#f6f4ee; background:#0f766e; border-radius:12px">Load the same file again: same IDs, rows skipped. Nothing is added twice.</p>
+  </div>
+  <aside>The one idea on this slide: you can stop it at any point and run it again. The reason is the internal SQL database, a SQLite file. Every transaction is one row with a state, new, needs review, approved, posted, and every step is saved the moment it happens, so nothing important lives only in memory. A crash or a kill cannot lose finished work. The table below it is what happens in each failure. For the ID on the right, start with the example: two real identical coffees on the same day read exactly the same, so the ID cannot come from the fields alone. We add n, how many identical rows came before this one, so the first coffee is n=0 and the second is n=1, and they get different IDs and both are kept. The ID is a SHA-256 fingerprint of the account, the date, the amount in cents and the description (trimmed, upper-cased, spaces collapsed) plus n. SHA-256 is a fingerprint function: the same input always gives the same output. So loading the same file again gives the same IDs and the rows are skipped. The ledger number is the first 20 characters of that fingerprint, saved at the first post attempt and never recomputed, so after a crash the retry sends the same number and the ledger rejects it as already there. If asked for evidence: I killed a real sync after 7 of 19 rows were decided, and the rerun did the other 12 with zero duplicates. The ledger-down case is covered by tests.</aside>
+</section>

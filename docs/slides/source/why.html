@@ -1,0 +1,56 @@
+<section id="why" data-transition="fade" style="display:flex; flex-direction:column; gap:28px; padding:80px 128px; background:#14262b">
+  <div style="display:flex; flex-direction:column; gap:12px">
+    <p style="font-family:'DM Sans', Arial, sans-serif; font-size:28px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:#5eead4">Under the hood</p>
+    <h2 style="font-family:'DM Sans', Arial, sans-serif; font-size:64px; font-weight:700; line-height:1.1; color:#f3efe6">How the agent works</h2>
+  </div>
+  <div style="display:flex; flex-direction:row; gap:28px">
+    <div style="display:flex; flex-direction:column; gap:14px; flex:1">
+      <p style="font-family:'DM Sans', Arial, sans-serif; font-size:28px; font-weight:700; color:#f3efe6">The agent loop (sync)</p>
+      <div style="display:flex; flex-direction:column; padding:12px 24px; background:#1d3940; border:1px solid #2f5058; border-radius:16px">
+        <div style="display:flex; flex-direction:row; gap:20px; align-items:center; padding:12px 0">
+          <p style="width:140px; font-family:'DM Sans', Arial, sans-serif; font-size:26px; font-weight:700; color:#5eead4">Look</p>
+          <p style="width:380px; font-family:'JetBrains Mono', 'Courier New', monospace; font-size:24px; color:#f3efe6">list_pending_transactions<br>list_categories</p>
+          <p style="flex:1; font-family:'DM Sans', Arial, sans-serif; font-size:24px; color:#c9d6d3">See what is waiting and which categories exist</p>
+        </div>
+        <div style="display:flex; flex-direction:row; gap:20px; align-items:center; padding:12px 0; border-top:1px solid #2f5058">
+          <p style="width:140px; font-family:'DM Sans', Arial, sans-serif; font-size:26px; font-weight:700; color:#5eead4">Think</p>
+          <p style="width:380px; font-family:'JetBrains Mono', 'Courier New', monospace; font-size:24px; color:#f3efe6">lookup_history</p>
+          <p style="flex:1; font-family:'DM Sans', Arial, sans-serif; font-size:24px; color:#c9d6d3">Check past decisions, including your review choices</p>
+        </div>
+        <div style="display:flex; flex-direction:row; gap:20px; align-items:center; padding:12px 0; border-top:1px solid #2f5058">
+          <p style="width:140px; font-family:'DM Sans', Arial, sans-serif; font-size:26px; font-weight:700; color:#5eead4">Act</p>
+          <p style="width:380px; font-family:'JetBrains Mono', 'Courier New', monospace; font-size:24px; color:#f3efe6">propose_category<br>flag_for_review</p>
+          <p style="flex:1; font-family:'DM Sans', Arial, sans-serif; font-size:24px; color:#c9d6d3">Propose a category, or hand it to a person</p>
+        </div>
+        <div style="display:flex; flex-direction:row; gap:20px; align-items:center; padding:12px 0; border-top:1px solid #2f5058">
+          <p style="width:140px; font-family:'DM Sans', Arial, sans-serif; font-size:26px; font-weight:700; color:#5eead4">Result and feedback</p>
+          <p style="width:380px; font-family:'JetBrains Mono', 'Courier New', monospace; font-size:24px; color:#f3efe6">posted | needs_review | error</p>
+          <p style="flex:1; font-family:'DM Sans', Arial, sans-serif; font-size:24px; color:#c9d6d3">Returned to the agent, which fixes errors and retries</p>
+        </div>
+        <p style="padding:12px 18px; font-family:'DM Sans', Arial, sans-serif; font-size:24px; font-weight:700; color:#f6f4ee; background:#0f766e; border-radius:10px">Repeat until nothing is pending (up to 5 rounds per sync)</p>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:10px; padding:20px 24px; background:#1d3940; border:1px solid #2f5058; border-radius:16px">
+        <h3 style="font-family:'DM Sans', Arial, sans-serif; font-size:30px; font-weight:700; color:#f2c14e">Chat mode: read-only</h3>
+        <p style="font-family:'JetBrains Mono', 'Courier New', monospace; font-size:24px; color:#f3efe6">list_categories | search_ledger | spend_report</p>
+        <p style="font-family:'DM Sans', Arial, sans-serif; font-size:24px; color:#c9d6d3">Answers questions about the ledger. No write tools exist in this mode.</p>
+      </div>
+    </div>
+    <div style="width:636px; display:flex; flex-direction:column; gap:20px">
+      <div style="display:flex; flex-direction:column; gap:12px; padding:28px; background:#1d3940; border:2px solid #5eead4; border-radius:16px">
+        <h3 style="font-family:'DM Sans', Arial, sans-serif; font-size:32px; font-weight:700; color:#5eead4">Guardrails</h3>
+        <p style="font-family:'DM Sans', Arial, sans-serif; font-size:24px; color:#e4eae8"><b>Gate:</b> auto-book only at 0.85+ confidence and under $500</p>
+        <p style="font-family:'DM Sans', Arial, sans-serif; font-size:24px; color:#e4eae8"><b>Validation:</b> real category, right direction of money</p>
+        <p style="font-family:'DM Sans', Arial, sans-serif; font-size:24px; color:#e4eae8"><b>Untrusted input:</b> bank text is data, never instructions</p>
+        <p style="font-family:'DM Sans', Arial, sans-serif; font-size:24px; color:#e4eae8"><b>Least privilege:</b> no shell, no files, chat is read-only</p>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:12px; padding:28px; background:#1d3940; border:2px solid #f2c14e; border-radius:16px">
+        <h3 style="font-family:'DM Sans', Arial, sans-serif; font-size:32px; font-weight:700; color:#f2c14e">Connecting other systems</h3>
+        <p style="font-family:'DM Sans', Arial, sans-serif; font-size:24px; color:#e4eae8"><b>Bank source:</b> implement BankProvider.fetch(), which returns date, description, amount, account</p>
+        <p style="font-family:'DM Sans', Arial, sans-serif; font-size:24px; color:#e4eae8"><b>Ledger:</b> a 5-method interface. Set AKAUNTING_URL, _USER and _PASSWORD to switch</p>
+        <p style="font-family:'DM Sans', Arial, sans-serif; font-size:24px; color:#e4eae8"><b>Tools:</b> standard MCP over stdio</p>
+        <p style="font-family:'DM Sans', Arial, sans-serif; font-size:24px; color:#e4eae8"><b>Not covered yet:</b> paid bank APIs (token renewal, cursors, pending vs posted)</p>
+      </div>
+    </div>
+  </div>
+  <aside>This is the working of the agent. It runs in a loop. Look: list the pending transactions and the valid categories. Think: if a merchant is unfamiliar, look up past decisions. Act: propose a category with a confidence, or flag the transaction for a person. Result and feedback: the gate answers with posted, needs_review, or an error, and that answer goes straight back to the agent as feedback, so it can fix its own mistake and retry. People feed back too: the history the agent looks up includes the categories you chose in review. The loop repeats until nothing is pending, up to five rounds per sync. The tools are the only door the model has. Chat is a separate mode with three read-only tools, so the write tools do not exist for it. Guardrails: the gate books automatically only at confidence 0.85 or more and under 500 dollars, which are judgment calls and constants in code today; validation checks the category exists and matches the direction of the money; bank text is untrusted data and the model never supplies amounts or dates; and there is no shell, no files, and passwords stay off the command line. To connect other systems: a bank source implements one method that returns canonical rows, which covers file exports but not paid bank APIs, which also need token renewal, sync cursors and pending versus posted handling. A ledger implements five methods: categories, post, find by number, search and spend report. Akaunting is the worked example, selected by setting three environment variables. The tools are served as standard MCP over stdio, and I have only run them with claude.</aside>
+</section>
